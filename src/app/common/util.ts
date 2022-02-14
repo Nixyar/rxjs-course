@@ -1,15 +1,10 @@
 import {Observable} from 'rxjs';
 
 export function createNewObservable(url: string) {
-  return new Observable(observer => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-    fetch(url, {signal}).then(res => {
-      return res.json();
-    }).then(body => {
+  return new Observable<any>(observer => {
+    fetch(url).then(res => res.json()).then(body => {
       observer.next(body);
       observer.complete();
     }).catch(err => observer.error(err));
-    return () => controller.abort();
   });
 }
