@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {ActivatedRoute} from "@angular/router";
-import {Course} from "../model/course";
+import {ActivatedRoute} from '@angular/router';
+import {Course} from '../model/course';
 import {
     debounceTime,
     distinctUntilChanged,
