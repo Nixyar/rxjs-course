@@ -11,11 +11,12 @@ import {
   concatMap,
   switchMap,
   withLatestFrom,
-  concatAll, shareReplay
+  concatAll, shareReplay, mergeMap
 } from 'rxjs/operators';
 import {merge, fromEvent, Observable, concat} from 'rxjs';
 import {Lesson} from '../model/lesson';
 import {createNewObservable} from '../common/util';
+import {any} from 'codelyzer/util/function';
 
 
 @Component({
@@ -37,19 +38,25 @@ export class CourseComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.course$ = createNewObservable(`/api/courses/${this.courseId}`);
-
-    this.lessons$ = createNewObservable(`/api/lessons?courseId=${this.courseId}&pageSize=${100}`).pipe(
-      map(value => Object.values(value['payload']))
-    );
   }
 
   ngAfterViewInit() {
-    fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
+    const initialLessons$ = this.loadLessons();
+
+    const searchLessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
       map(event => event.target.value),
-      debounceTime(1500),
-      distinctUntilChanged()
-    ).subscribe();
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap(val => this.loadLessons(val))
+    );
+
+    this.lessons$ = concat(initialLessons$, searchLessons$);
   }
 
+  loadLessons(search = ''): Observable<Lesson[]> {
+    return createNewObservable(`/api/lessons?courseId=${this.courseId}&pageSize=${100}&filter=${search}`).pipe(
+      map(value => Object.values(value['payload']))
+    );
+  }
 
 }
