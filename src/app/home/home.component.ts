@@ -23,7 +23,19 @@ export class HomeComponent implements OnInit {
 
     const courses$: Observable<any> = http$.pipe(
       map(res => Object.values(res['payload'])),
-      shareReplay()
+      shareReplay(),
+      catchError(err => of([{
+        id: 3,
+        description: 'RxJs In Practice Course',
+        longDescription: 'Understand the RxJs Observable pattern, learn the RxJs Operators via practical examples',
+        iconUrl: 'https://s3-us-west-1.amazonaws.com/angular-university/course-images/rxjs-in-practice-course.png',
+        courseListIcon: 'https://angular-academy.s3.amazonaws.com/main-logo/main-page-logo-small-hat.png',
+        category: 'BEGINNER',
+        lessonsCount: 10,
+        seqNo: 2,
+        url: 'rxjs-course',
+        price: 50
+      }]))
     );
 
     this.beginnerCourses$ = courses$.pipe(

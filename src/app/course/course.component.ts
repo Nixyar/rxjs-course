@@ -11,9 +11,9 @@ import {
   concatMap,
   switchMap,
   withLatestFrom,
-  concatAll, shareReplay, mergeMap
+  concatAll, shareReplay, mergeMap, catchError
 } from 'rxjs/operators';
-import {merge, fromEvent, Observable, concat} from 'rxjs';
+import {merge, fromEvent, Observable, concat, of} from 'rxjs';
 import {Lesson} from '../model/lesson';
 import {createNewObservable} from '../common/util';
 import {any} from 'codelyzer/util/function';
@@ -47,7 +47,7 @@ export class CourseComponent implements OnInit, AfterViewInit {
       map(event => event.target.value),
       debounceTime(400),
       distinctUntilChanged(),
-      switchMap(val => this.loadLessons(val))
+      switchMap(val => this.loadLessons(val)),
     );
 
     this.lessons$ = concat(initialLessons$, searchLessons$);
