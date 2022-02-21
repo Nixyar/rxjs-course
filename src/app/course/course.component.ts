@@ -11,7 +11,7 @@ import {
   concatMap,
   switchMap,
   withLatestFrom,
-  concatAll, shareReplay, mergeMap, catchError
+  concatAll, shareReplay, mergeMap, catchError, throttleTime
 } from 'rxjs/operators';
 import {merge, fromEvent, Observable, concat, of} from 'rxjs';
 import {Lesson} from '../model/lesson';
@@ -26,7 +26,7 @@ import {any} from 'codelyzer/util/function';
 })
 export class CourseComponent implements OnInit, AfterViewInit {
   course$: Observable<Course>;
-  lessons$: Observable<Lesson[]>;
+  lessons$: Observable<any>;
   courseId = this.route.snapshot.params['id'];
 
   @ViewChild('searchInput', {static: true}) input: ElementRef;
@@ -41,16 +41,13 @@ export class CourseComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    const initialLessons$ = this.loadLessons();
-
-    const searchLessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
+    this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
       map(event => event.target.value),
-      debounceTime(400),
+      startWith(''),
+      throttleTime(1000),
       distinctUntilChanged(),
       switchMap(val => this.loadLessons(val)),
     );
-
-    this.lessons$ = concat(initialLessons$, searchLessons$);
   }
 
   loadLessons(search = ''): Observable<Lesson[]> {
