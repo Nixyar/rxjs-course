@@ -1,22 +1,11 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {Course} from '../model/course';
-import {
-  debounceTime,
-  distinctUntilChanged,
-  startWith,
-  tap,
-  delay,
-  map,
-  concatMap,
-  switchMap,
-  withLatestFrom,
-  concatAll, shareReplay, mergeMap, catchError, throttleTime
-} from 'rxjs/operators';
-import {merge, fromEvent, Observable, concat, of} from 'rxjs';
+import {debounceTime, distinctUntilChanged, map, mergeMap, startWith, switchMap, tap, throttleTime} from 'rxjs/operators';
+import {forkJoin, fromEvent, Observable} from 'rxjs';
 import {Lesson} from '../model/lesson';
 import {createNewObservable} from '../common/util';
-import {any} from 'codelyzer/util/function';
+import {debug, RxJsLoggingLevel, setRxJsLoggingLevel} from '../debug';
 
 
 @Component({
@@ -25,29 +14,35 @@ import {any} from 'codelyzer/util/function';
   styleUrls: ['./course.component.css']
 })
 export class CourseComponent implements OnInit, AfterViewInit {
-  course$: Observable<Course>;
-  lessons$: Observable<any>;
+  course$ = new Observable<Course[]>();
+  lessons$ = new Observable<Lesson[]>();
   courseId = this.route.snapshot.params['id'];
 
   @ViewChild('searchInput', {static: true}) input: ElementRef;
 
-  constructor(private route: ActivatedRoute) {
-
-
-  }
+  constructor(private route: ActivatedRoute) {}
 
   ngOnInit() {
     this.course$ = createNewObservable(`/api/courses/${this.courseId}`);
+    this.lessons$ = this.loadLessons();
+
+    forkJoin([this.course$, this.lessons$]).pipe(
+      tap(([course, lessons]) => {
+        console.log('course', course);
+        console.log('lessons', lessons);
+      })
+    ).subscribe();
+
+    setRxJsLoggingLevel(RxJsLoggingLevel.DEBUG);
   }
 
   ngAfterViewInit() {
-    this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
+    fromEvent<any>(this.input.nativeElement, 'keyup').pipe(
       map(event => event.target.value),
-      startWith(''),
-      throttleTime(1000),
-      distinctUntilChanged(),
-      switchMap(val => this.loadLessons(val)),
-    );
+      debounceTime(1000),
+      mergeMap(search => this.lessons$ = this.loadLessons(search)),
+      tap(console.log)
+    ).subscribe();
   }
 
   loadLessons(search = ''): Observable<Lesson[]> {
