@@ -17,7 +17,7 @@ export class Store {
 
     http$.pipe(
       map(res => Object.values(res['payload']))
-    ).subscribe(res => this.subject.next(res));
+    ).subscribe((res: Course[]) => this.subject.next(res));
   }
 
   changeCategory(category: string) {

@@ -19,5 +19,4 @@ export class HomeComponent implements OnInit {
     this.beginnerCourses$ = this.store.changeCategory('BEGINNER');
     this.advancedCourses$ = this.store.changeCategory('ADVANCED');
   }
-
 }
