@@ -3,11 +3,11 @@ import {ActivatedRoute} from '@angular/router';
 import {Course} from '../model/course';
 import {
   debounceTime,
-  distinctUntilChanged,
+  distinctUntilChanged, first,
   map,
-  switchMap
+  switchMap, take, tap
 } from 'rxjs/operators';
-import {merge, fromEvent, Observable, concat} from 'rxjs';
+import {fromEvent, Observable, concat, forkJoin} from 'rxjs';
 import {Lesson} from '../model/lesson';
 import {createHttpObservable} from '../common/util';
 import {Store} from '../common/store.service';
@@ -30,12 +30,12 @@ export class CourseComponent implements OnInit, AfterViewInit {
   @ViewChild('searchInput', {static: true}) input: ElementRef;
 
   constructor(private route: ActivatedRoute, private store: Store) {
-
-
   }
 
   ngOnInit() {
-    this.course$ = this.store.findCourseForId(this.courseId);
+    this.course$ = this.store.findCourseForId(this.courseId).pipe(take(1));
+
+    forkJoin([this.course$, this.loadLessons()]).subscribe(console.log);
   }
 
   ngAfterViewInit() {
