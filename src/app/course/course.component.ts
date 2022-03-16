@@ -5,9 +5,9 @@ import {
   debounceTime,
   distinctUntilChanged,
   map,
-  switchMap
+  switchMap, tap, withLatestFrom
 } from 'rxjs/operators';
-import {merge, fromEvent, Observable, concat} from 'rxjs';
+import {fromEvent, Observable, concat} from 'rxjs';
 import {Lesson} from '../model/lesson';
 import {createHttpObservable} from '../common/util';
 import {Store} from '../common/store.service';
@@ -20,7 +20,7 @@ import {Store} from '../common/store.service';
 })
 export class CourseComponent implements OnInit, AfterViewInit {
 
-  courseId: number = +this.route.snapshot.params['id'];
+  courseId: number;
 
   course$: Observable<Course>;
 
@@ -30,12 +30,18 @@ export class CourseComponent implements OnInit, AfterViewInit {
   @ViewChild('searchInput', {static: true}) input: ElementRef;
 
   constructor(private route: ActivatedRoute, private store: Store) {
-
-
   }
 
   ngOnInit() {
+    this.courseId = +this.route.snapshot.params['id'];
     this.course$ = this.store.findCourseForId(this.courseId);
+
+    this.loadLessons().pipe(
+      withLatestFrom(this.course$)
+    ).subscribe(([lessons, course]) => {
+      console.log(lessons);
+      console.log(course);
+    });
   }
 
   ngAfterViewInit() {
