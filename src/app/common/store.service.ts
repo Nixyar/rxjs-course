@@ -3,6 +3,7 @@ import {BehaviorSubject, Observable} from 'rxjs';
 import {Course} from '../model/course';
 import {createHttpObservable} from './util';
 import {map} from 'rxjs/operators';
+import {fromPromise} from 'rxjs/internal-compatibility';
 
 @Injectable({
   providedIn: 'root'
@@ -25,5 +26,21 @@ export class Store {
       map(courses => courses
         .filter(course => course.category === category))
     );
+  }
+
+  saveCourse(courseId: number, changesCourse) {
+    const courses = this.subject.getValue();
+    const courseIndex = courses.findIndex((course) => course.id === courseId);
+    const newCoursesArr = courses.slice(0);
+    newCoursesArr[courseIndex] = {
+      ...courses[courseIndex],
+      ...changesCourse
+    };
+    this.subject.next(newCoursesArr);
+    return fromPromise(fetch(`/api/courses/${courseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(changesCourse),
+      headers: {'content-type': 'application/json'}
+    }));
   }
 }
