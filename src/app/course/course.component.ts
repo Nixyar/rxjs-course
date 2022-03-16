@@ -3,11 +3,11 @@ import {ActivatedRoute} from '@angular/router';
 import {Course} from '../model/course';
 import {
   debounceTime,
-  distinctUntilChanged, first,
+  distinctUntilChanged,
   map,
-  switchMap, take, tap
+  switchMap, tap, withLatestFrom
 } from 'rxjs/operators';
-import {fromEvent, Observable, concat, forkJoin} from 'rxjs';
+import {fromEvent, Observable, concat} from 'rxjs';
 import {Lesson} from '../model/lesson';
 import {createHttpObservable} from '../common/util';
 import {Store} from '../common/store.service';
@@ -20,7 +20,7 @@ import {Store} from '../common/store.service';
 })
 export class CourseComponent implements OnInit, AfterViewInit {
 
-  courseId: number = +this.route.snapshot.params['id'];
+  courseId: number;
 
   course$: Observable<Course>;
 
@@ -33,9 +33,15 @@ export class CourseComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.course$ = this.store.findCourseForId(this.courseId).pipe(take(1));
+    this.courseId = +this.route.snapshot.params['id'];
+    this.course$ = this.store.findCourseForId(this.courseId);
 
-    forkJoin([this.course$, this.loadLessons()]).subscribe(console.log);
+    this.loadLessons().pipe(
+      withLatestFrom(this.course$)
+    ).subscribe(([lessons, course]) => {
+      console.log(lessons);
+      console.log(course);
+    });
   }
 
   ngAfterViewInit() {
